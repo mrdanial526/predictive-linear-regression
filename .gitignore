@@ -34,15 +34,18 @@ env/
 # Raw data caching
 data/*.csv
 !data/README.md
+!data/ames_housing.csv
 
 # Saved models & checkpoints
 models/*.joblib
+!models/*.joblib
 models/*.pkl
 !models/.gitkeep
 
 # Reports output
 reports/*.png
 reports/*.csv
+!reports/*.csv
 !reports/.gitkeep
 
 # Pytest / Coverage

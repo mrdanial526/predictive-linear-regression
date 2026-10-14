@@ -172,23 +172,6 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 # ==========================================
 # 2. DATA & MODEL LOADING (CACHED)
 # ==========================================
-@st.cache_resource
-def get_pipelines():
-    """Load persisted Ridge and Baseline pipelines."""
-    ridge_path = "models/ridge_pipeline.joblib"
-    baseline_path = "models/baseline_pipeline.joblib"
-
-    ridge_model = None
-    baseline_model = None
-
-    if os.path.exists(ridge_path):
-        ridge_model = joblib.load(ridge_path)
-    if os.path.exists(baseline_path):
-        baseline_model = joblib.load(baseline_path)
-
-    return ridge_model, baseline_model
-
-
 @st.cache_data
 def get_data_and_test_metrics():
     """Load dataset, run quick split, and compute test predictions for diagnostics."""
@@ -198,9 +181,54 @@ def get_data_and_test_metrics():
     return df, X, y, X_train, X_test, y_train, y_test
 
 
+@st.cache_resource
+def get_pipelines(X_train: pd.DataFrame, y_train: pd.Series):
+    """Load persisted Ridge and Baseline pipelines, auto-training fallback if missing on cloud container."""
+    ridge_path = "models/ridge_pipeline.joblib"
+    baseline_path = "models/baseline_pipeline.joblib"
+
+    ridge_model = None
+    baseline_model = None
+
+    if os.path.exists(ridge_path):
+        try:
+            ridge_model = joblib.load(ridge_path)
+        except Exception:
+            ridge_model = None
+
+    if os.path.exists(baseline_path):
+        try:
+            baseline_model = joblib.load(baseline_path)
+        except Exception:
+            baseline_model = None
+
+    # Fallback auto-training if missing on cloud runtime
+    if ridge_model is None or baseline_model is None:
+        from src.preprocessing import create_preprocessor, identify_feature_types
+        from src.train import (
+            save_pipeline,
+            train_baseline_linear_regression,
+            train_ridge_regression,
+        )
+
+        num_cols, cat_cols = identify_feature_types(X_train)
+        preprocessor = create_preprocessor(num_cols, cat_cols)
+
+        if baseline_model is None:
+            baseline_model = train_baseline_linear_regression(preprocessor, X_train, y_train)
+            save_pipeline(baseline_model, baseline_path)
+
+        if ridge_model is None:
+            ridge_model, _ = train_ridge_regression(preprocessor, X_train, y_train, cv=5)
+            save_pipeline(ridge_model, ridge_path)
+
+    return ridge_model, baseline_model
+
+
 # Load resources
-ridge_pipeline, baseline_pipeline = get_pipelines()
 df, X, y, X_train, X_test, y_train, y_test = get_data_and_test_metrics()
+ridge_pipeline, baseline_pipeline = get_pipelines(X_train, y_train)
+
 
 # ==========================================
 # 3. HEADER & KPI CARDS
@@ -422,7 +450,11 @@ with tab_benchmark:
     with comp_c2:
         # Precompute test predictions for visualization
         y_test_arr = np.asarray(y_test, dtype=float)
-        y_pred_ridge = ridge_pipeline.predict(X_test) if ridge_pipeline else baseline_pipeline.predict(X_test)
+        active_eval = ridge_pipeline if ridge_pipeline is not None else baseline_pipeline
+        if active_eval is not None:
+            y_pred_ridge = active_eval.predict(X_test)
+        else:
+            y_pred_ridge = y_test_arr.copy()
         residuals_ridge = y_test_arr - y_pred_ridge
 
         # Plotly Actual vs. Predicted
