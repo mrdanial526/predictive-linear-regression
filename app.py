@@ -213,7 +213,7 @@ st.markdown(
             <p class="brand-subtitle">End-to-End Supervised Regression Pipeline • Scikit-Learn • Ridge Regularization</p>
         </div>
         <div style="text-align: right;">
-            <a href="https://github.com" target="_blank" style="text-decoration: none;">
+            <a href="https://github.com/mrdanial526/predictive-linear-regression" target="_blank" style="text-decoration: none;">
                 <span style="background: #1f2937; border: 1px solid #374151; padding: 6px 14px; border-radius: 8px; color: #f3f4f6; font-size: 0.85rem; font-weight: 500;">
                     ⭐ GitHub Project
                 </span>
