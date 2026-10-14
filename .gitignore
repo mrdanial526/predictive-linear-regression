@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Raw data caching
+data/*.csv
+!data/README.md
+
+# Saved models & checkpoints
+models/*.joblib
+models/*.pkl
+!models/.gitkeep
+
+# Reports output
+reports/*.png
+reports/*.csv
+!reports/.gitkeep
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor directories
+.idea/
+.vscode/
+*.swp
+*.swo
